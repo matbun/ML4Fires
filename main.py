@@ -39,7 +39,7 @@ from lightning.fabric.plugins.environments import MPIEnvironment
 from torchmetrics.regression import MeanSquaredError
 
 import Fires
-from Fires._datasets.dataset_zarr import DatasetZarr, load_zarr
+from Fires._datasets.dataset_zarr import Dataset025, load_zarr
 from Fires._datasets.torch_dataset import FireDataset
 from Fires._macros.macros import (
 	CONFIG,
@@ -47,7 +47,7 @@ from Fires._macros.macros import (
 	DISCORD_CFG,
 	CHECKPOINTS_DIR,
 	DATA_DIR,
-	LOG_DIR,
+	LOGS_DIR,
 	NEW_DS_PATH,
 	RUN_DIR,
 	SCALER_DIR,
@@ -65,7 +65,7 @@ from Fires._utilities.logger import Logger as logger
 from Fires.trainer import FabricTrainer
 
 # define logger
-_log = logger(log_dir=LOG_DIR).get_logger("Workflow")
+_log = logger(log_dir=LOGS_DIR).get_logger("Workflow")
 
 # current experiment configuration dict
 current_experiment = dict(
@@ -81,6 +81,7 @@ _log.info(f"Define a dictionary to store current experiment configuration: \n {c
 features = CONFIG.data.configs.config_fcci
 drivers = features[:-1]
 targets = [features[-1]]
+# set drivers and targets into current experiment dictionary
 current_experiment['features']['drivers'] = drivers
 current_experiment['features']['targets'] = targets
 
@@ -102,7 +103,7 @@ _log.info(f"Validation: {val_years[0]}, ..., {val_years[-1]}")
 _log.info(f"Creating dataset zarr...")
 
 # create Dataset
-DatasetZarr()
+Dataset025()
 
 _log.info(f"Dataset zarr has been created")
 
@@ -134,6 +135,7 @@ for file in os.listdir(SCALER_DIR):
 
 		current_experiment['scalers']['paths'][key] = filepath
 
+# ---- CHECK CLI ARGUMENTS -------------------------------------------------------------------------
 
 _log.info(f"Start checking arguments...")
 
@@ -150,6 +152,7 @@ if checked_args:
 
 	_log.info(f"Experiment {exp_name}")
 	
+# ---- DEFINE SCALER -------------------------------------------------------------------------------
 
 # define scaler for drivers
 x_scaler = StandardScaler(mean_ds=mean_ds, stdv_ds=stdv_ds, features=drivers)
@@ -157,6 +160,8 @@ current_experiment['scalers']['cls'] = str(StandardScaler)
 
 current_experiment['dataset']['torch'] = dict()
 current_experiment['dataset']['torch']['args'] = dict()
+
+# ---- DEFINE TORCH DATASET ------------------------------------------------------------------------
 
 # fire dataset arguments
 fire_ds_args = dict(src=new_path, drivers=drivers, targets=targets)
@@ -167,7 +172,7 @@ trn_torch_ds = FireDataset(**fire_ds_args, years=trn_years, scalers=[x_scaler, N
 val_torch_ds = FireDataset(**fire_ds_args, years=val_years, scalers=[x_scaler, None])
 current_experiment['dataset']['torch']['cls'] = str(FireDataset)
 
-# --------------------------------------------------
+# ---- DEFINE TRAINER ARGUMENTS --------------------------------------------------------------------
 
 current_experiment['trainer']['args'] = dict()
 
@@ -229,9 +234,9 @@ today = eval(CONFIG.utils.datetime.today)
 csv_fname = f'{today}_csv_logs'
 
 # define csv logger
-loggers = CSVLogger(root_dir=LOG_DIR, name=csv_fname)
+loggers = CSVLogger(root_dir=LOGS_DIR, name=csv_fname)
 current_experiment['trainer']['args']['loggers_cls'] = str(CSVLogger)
-current_experiment['trainer']['args']['loggers_root_dir'] = LOG_DIR
+current_experiment['trainer']['args']['loggers_root_dir'] = LOGS_DIR
 current_experiment['trainer']['args']['loggers_name'] = csv_fname
 
 # define number of nodes used on the cluster
@@ -252,6 +257,8 @@ print(f" Strategy: {strategy}")
 
 # set distributed sampler
 use_distributed_sampler = eval(TORCH_CFG.trainer.use_distributed_sampler)
+
+# ---- DEFINE TRAINER ------------------------------------------------------------------------------
 
 # initialize trainer and its arguments
 trainer = FabricTrainer(
@@ -283,6 +290,7 @@ _log.info(f"Logger initialized. Starting the execution")
 for key in p_variables:
 	_log.info(f"   {key.capitalize().replace('_', ' ')}  :  {p_variables[key]}")
 
+# --------------------------------------------------------------------------------------------------
 
 # define PyTorch model
 # TODO implement the model selection from argument parser
