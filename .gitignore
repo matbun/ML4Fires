@@ -1,0 +1,16 @@
+.DS_Store
+# seasfire.zarr
+*.pyc
+*.log
+*.zarr
+digital_twin_notebooks/img/*.png
+digital_twin_notebooks/*.onnx
+digital_twin_notebooks/inference_with_onnx.ipynb
+digital_twin_notebooks/model_conversion_pytorch_to_onnx.ipynb
+experiments
+transfer.sh
+*.png
+data
+ml4fires_old_3_10
+ML4F_venv
+requirements_files

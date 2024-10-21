@@ -1,0 +1,39 @@
+[data]
+
+	[data.features]
+	drivers = ['lai', 'lst_day', 'rel_hum', 'sst', 't2m_min', 'tp', 'lsm']
+	targets = ['fcci_ba']
+	landsea_mask = ['lsm']
+	
+	trn_years_list = "list(range(2001, 2017))"
+	val_years_list = "list(range(2017, 2019))"
+	tst_years_list = "list(range(2019, 2022))"
+
+	[data.files]
+	DATA_PATH_025KM = "os.path.join(DATA_DIR, 'data_025km.zarr')"
+	DATA_PATH_100KM = "os.path.join(DATA_DIR, 'data_100km.zarr')"
+	DATA_PATH_ORIGINAL = "os.path.join(DATA_DIR, 'seasfire_v03.zarr')"
+	DATA_NEW_FPATH = "os.path.join(DATA_DIR, 'seasfire_v03_preprocessed.zarr')"
+	NEW_DS_PATH = "lambda name: os.path.join(DATA_DIR, f'sfv03_{name.lower()}.zarr')"
+
+[dir]
+LOGS_DIR = "os.path.join(CURR_DIR, 'logs')"
+EXPS_DIR = "os.path.join(CURR_DIR, 'experiments')"
+DATA_DIR = "os.path.join(CURR_DIR, 'data')"
+SCALER_DIR = "os.path.join(DATA_DIR, 'scaler')"
+
+
+[toml]
+tflow_fname = "tflow.toml"
+torch_fname = "torch.toml"
+
+	[toml.logs]
+	discord_fname = "discord.toml"
+
+[utils]
+
+	[utils.random]
+	seed = 34698270934765
+
+	[utils.datetime]
+	today = "str(dt.now()).split('.')[0].replace('-', '').replace(':', '').replace(' ', '_')"
