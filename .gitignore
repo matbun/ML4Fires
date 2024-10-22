@@ -3,6 +3,7 @@
 *.pyc
 *.log
 *.zarr
+config/credentials.toml
 digital_twin_notebooks/img/*.png
 digital_twin_notebooks/*.onnx
 digital_twin_notebooks/inference_with_onnx.ipynb

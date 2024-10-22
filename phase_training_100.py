@@ -37,6 +37,7 @@ from Fires._macros.macros import (
 	TORCH_CFG,
 	DISCORD_CFG,
 	CHECKPOINTS_DIR,
+	CREDENTIALS_CFG,
 	DATA_DIR,
 	LOGS_DIR,
 	NEW_DS_PATH,
@@ -66,8 +67,8 @@ _log = logger(log_dir=LOGS_DIR).get_logger("Training_on_100km")
 
 
 os.environ['MLFLOW_TRACKING_INSECURE_TLS'] = 'true'
-os.environ['MLFLOW_TRACKING_USERNAME'] = 'YOUR_EMAIL'
-os.environ['MLFLOW_TRACKING_PASSWORD'] = 'YOUR_PASSWORD'
+os.environ['MLFLOW_TRACKING_USERNAME'] = os.environ(CREDENTIALS_CFG.credentials.username)
+os.environ['MLFLOW_TRACKING_PASSWORD'] = os.environ(CREDENTIALS_CFG.credentials.password)
 TRACKING_URI = 'https://mlflow.intertwin.fedcloud.eu/'
 
 
