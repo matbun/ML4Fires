@@ -56,7 +56,7 @@ TORCH_CFG = load_global_config(dir_name=CONFIG_DIR, config_fname=CONFIG.toml.tor
 # set discord configuration file
 DISCORD_CFG = load_global_config(dir_name=CONFIG_DIR, config_fname=CONFIG.toml.logs.discord_fname)
 # set credentials configuration file
-CREDENTIALS_CFG = load_global_config(dir_name=CONFIG_DIR, config_fname=CONFIG.toml.logs.credentials_fname)
+CREDENTIALS_CFG = load_global_config(dir_name=CONFIG_DIR, config_fname=CONFIG.toml.credentials_fname)
 
 # define features
 DRIVERS = CONFIG.data.features.drivers
