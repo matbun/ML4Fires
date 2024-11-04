@@ -264,17 +264,17 @@ def get_lightning_trainer():
 	# get loggers for Fabric Trainer
 	# _loggers = get_loggers(run_name=run_name)
 	itwinai_logger = LoggersCollection([
-        MLFlowLogger(
-            experiment_name=run_name,
-            tracking_uri=os.getenv('MLFLOW_TRACKING_URI'),
-            log_freq=10
-        ),
-        Prov4MLLogger(
-            savedir=os.path.join(LOGS_DIR, "ITWINAI", "provenance"),
-            experiment_name=run_name,
-            save_after_n_logs=1
-        )
-    ])
+		MLFlowLogger(
+			experiment_name=run_name,
+			tracking_uri=os.getenv('MLFLOW_TRACKING_URI'),
+			log_freq=10
+		),
+		Prov4MLLogger(
+			savedir=os.path.join(LOGS_DIR, "ITWINAI", "provenance"),
+			experiment_name=run_name,
+			save_after_n_logs=1
+		)
+	])
 
 	# get callbacks for Fabric Trainer
 	_callbacks = get_callbacks()
@@ -355,10 +355,9 @@ def main():
 		# fit the model
 		trainer.fit(
 			model=model,
-			train_dataloaders=train_loader, 
+			train_dataloaders=train_loader,
 			val_dataloaders=valid_loader
 		)
-			# log_mlflow=True)
 
 		# save the model to disk
 		last_model = os.path.join(RUN_DIR,'last_model.pt')
