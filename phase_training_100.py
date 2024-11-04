@@ -339,61 +339,73 @@ def main():
 
 	# get instance of Pytorch Lightning Trainer
 	trainer = get_lightning_trainer()
+	with trainer.itwinai_logger.start_logging(rank=trainer.global_rank):
 
-	# get global rank
-	global_rank = trainer.global_rank
-	print(f" | Global rank {global_rank}")
+		# get global rank
+		global_rank = trainer.global_rank
+		print(f" | Global rank {global_rank}")
 
-	# Automatically log params, metrics, and model
-	mlflow.pytorch.autolog()
+		# Automatically log params, metrics, and model
+		mlflow.pytorch.autolog()
 
-	# Initialize MLflow run using the setup_mlflow_run function
-	if global_rank == 0:
-		mlflow.start_run(run_name=run_name)
+		# # Initialize MLflow run using the setup_mlflow_run function
+		# if global_rank == 0:
+		# 	mlflow.start_run(run_name=run_name)
 
-	# fit the model
-	trainer.fit(
-		model=model,
-		train_dataloaders=train_loader, 
-		val_dataloaders=valid_loader
-	)
-		# log_mlflow=True)
+		# fit the model
+		trainer.fit(
+			model=model,
+			train_dataloaders=train_loader, 
+			val_dataloaders=valid_loader
+		)
+			# log_mlflow=True)
 
-	# save the model to disk
-	last_model = os.path.join(RUN_DIR,'last_model.pt')
-	trainer.save_checkpoint(filepath=last_model)
+		# save the model to disk
+		last_model = os.path.join(RUN_DIR,'last_model.pt')
+		trainer.save_checkpoint(filepath=last_model)
 
-	# trainer.fabric.save(
-	# 	path=last_model,
-	# 	state={
-	# 		'model':trainer.model,
-	# 		'optimizer':trainer.optimizer,
-	# 		'scheduler': trainer.scheduler_cfg
-	# 	}
-	# )
+		# trainer.fabric.save(
+		# 	path=last_model,
+		# 	state={
+		# 		'model':trainer.model,
+		# 		'optimizer':trainer.optimizer,
+		# 		'scheduler': trainer.scheduler_cfg
+		# 	}
+		# )
 
-	# log weights
-	if global_rank == 0:
-		mlflow.log_artifact(last_model, artifact_path="model_weights")
+		# # log weights
+		# if global_rank == 0:
+		# 	mlflow.log_artifact(last_model, artifact_path="model_weights")
+		trainer.itwinai_logger.log(
+				item=last_model,
+				identifier="model_weights",
+				kind='artifact'
+		)
 
-	# log model
-	original_model = trainer.model # trainer.model.module
+		# log model
+		original_model = trainer.model # trainer.model.module
 
-	# Remove non-serializable attributes
-	# if hasattr(original_model, '_fabric'):
-	# 	del original_model._fabric
-	# if hasattr(original_model, 'comm'):
-	# 	del original_model.comm
+		# Remove non-serializable attributes
+		# if hasattr(original_model, '_fabric'):
+		# 	del original_model._fabric
+		# if hasattr(original_model, 'comm'):
+		# 	del original_model.comm
 
-	original_model.cpu()
+		original_model.cpu()
 
-	# log model
-	if global_rank == 0:
-		mlflow.pytorch.log_model(original_model, "last_model")
+		trainer.itwinai_logger.log(
+			item=original_model,
+			identifier="last_model",
+			kind='model'
+		)
 
-	# end MLFlow run
-	if global_rank == 0:
-		mlflow.end_run()
+		# # log model
+		# if global_rank == 0:
+		# 	mlflow.pytorch.log_model(original_model, "last_model")
+
+		# # end MLFlow run
+		# if global_rank == 0:
+		# 	mlflow.end_run()
 
 
 @debug(log=_log)
