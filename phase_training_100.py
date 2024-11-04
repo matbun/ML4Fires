@@ -71,6 +71,7 @@ from Fires._utilities.utils_general import check_backend
 from Fires._utilities.utils_mlflow import setup_mlflow_experiment
 from Fires._utilities.utils_trainer import get_callbacks, get_loggers   
 from Fires.trainer import FabricTrainer
+from itwinai.loggers import MLFlowLogger, Prov4MLLogger, LoggersCollection
 
 # define logger
 _log = logger(log_dir=LOGS_DIR).get_logger("Training_on_100km")
@@ -82,7 +83,7 @@ def init_fabric():
 	backend = check_backend()
 
 	# get loggers for Fabric Trainer
-	_loggers = get_loggers()
+	# _loggers = get_loggers()
 
 	# get callbacks for Fabric Trainer
 	_callbacks = get_callbacks()
@@ -96,7 +97,7 @@ def init_fabric():
 		precision=TORCH_CFG.trainer.precision,
 		plugins=eval(TORCH_CFG.trainer.plugins),
 		callbacks=_callbacks,
-		loggers=_loggers,
+		# loggers=_loggers,
 	)
 
 	# # init fabric accelerator
@@ -261,7 +262,19 @@ def get_lightning_trainer():
 	backend=check_backend()
 
 	# get loggers for Fabric Trainer
-	_loggers = get_loggers(run_name=run_name)
+	# _loggers = get_loggers(run_name=run_name)
+	itwinai_logger = LoggersCollection([
+        MLFlowLogger(
+            experiment_name=run_name,
+            tracking_uri=os.getenv('MLFLOW_TRACKING_URI'),
+            log_freq=10
+        ),
+        Prov4MLLogger(
+            savedir=os.path.join(LOGS_DIR, "ITWINAI", "provenance"),
+            experiment_name=run_name,
+            save_after_n_logs=1
+        )
+    ])
 
 	# get callbacks for Fabric Trainer
 	_callbacks = get_callbacks()
@@ -276,10 +289,11 @@ def get_lightning_trainer():
 		devices=1, #TORCH_CFG.trainer.devices,
 		num_nodes=1, #TORCH_CFG.trainer.num_nodes,
 		precision= TORCH_CFG.trainer.precision,
-		logger=_loggers,
+		# logger=_loggers,
 		callbacks=_callbacks,
 		max_epochs=5, # TORCH_CFG.trainer.epochs,
 	)
+	pl_trainer.itwinai_logger = itwinai_logger
 
 	return pl_trainer
 

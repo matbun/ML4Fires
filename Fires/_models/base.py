@@ -35,6 +35,7 @@ from Fires._utilities.decorators import export
 from Fires._utilities.logger_itwinai import SimpleItwinaiLogger, ItwinaiLightningLogger, ProvenanceLogger
 
 from itwinai.loggers import ConsoleLogger, Prov4MLLogger
+from itwinai.loggers import Logger as BaseItwinaiLogger
 
 
 @export
@@ -68,17 +69,26 @@ class BaseLightningModule(pl.LightningModule):
 		super().__init__(*args, **kwargs)
 		self.callback_metrics:Dict[str | Any] = {}
 	
+	# @property
+	# def itwinai_logger(self) -> Optional[List[SimpleItwinaiLogger | Prov4MLLogger] | None]:
+	# 	if hasattr(self.trainer, 'loggers'):
+	# 		_loggers = []
+	# 		for logger in self.trainer.loggers:
+	# 			if isinstance(logger, (ItwinaiLightningLogger, ProvenanceLogger)):
+	# 				_loggers.append(logger.logger)
+	# 		return _loggers
+	# 	else:
+	# 		print("WARNING: itwinai_logger non trovato nei trainer loggers.")
+	# 		return None
 	@property
-	def itwinai_logger(self) -> Optional[List[SimpleItwinaiLogger | Prov4MLLogger] | None]:
-		if hasattr(self.trainer, 'loggers'):
-			_loggers = []
-			for logger in self.trainer.loggers:
-				if isinstance(logger, (ItwinaiLightningLogger, ProvenanceLogger)):
-					_loggers.append(logger.logger)
-			return _loggers
-		else:
-			print("WARNING: itwinai_logger non trovato nei trainer loggers.")
-			return None
+	def itwinai_logger(self) -> BaseItwinaiLogger:
+		try:
+			itwinai_logger = self.trainer.itwinai_logger
+		except AttributeError:
+			print("WARNING: itwinai_logger attribute not set "
+					f"in {self.__class__.__name__}")
+			itwinai_logger = None
+		return itwinai_logger
 	
 	def training_step(self, batch, batch_idx):
 		# get data from the batch
@@ -109,11 +119,12 @@ class BaseLightningModule(pl.LightningModule):
 
 		# Log with itwinai logger all the hyperparameters from training step
 		if self.itwinai_logger:
-			for l in self.itwinai_logger:
-				if isinstance(l, SimpleItwinaiLogger):
-					print("Simple Itwinai Logger train step")
-					# Log hyper-parameters
-					l.save_hyperparameters(self.callback_metrics)
+			self.itwinai_logger.save_hyperparameters(self.callback_metrics)
+			# for l in self.itwinai_logger:
+			# 	if isinstance(l, SimpleItwinaiLogger):
+			# 		print("Simple Itwinai Logger train step")
+			# 		# Log hyper-parameters
+			# 		l.save_hyperparameters(self.callback_metrics)
 
 		# return the loss
 		return {'loss':loss}
@@ -147,15 +158,16 @@ class BaseLightningModule(pl.LightningModule):
 
 		# Log with itwinai logger all the hyperparameters from training step
 		if self.itwinai_logger:
-			for l in self.itwinai_logger:
-				if isinstance(l, Prov4MLLogger):
-					print("Prov4ML Logger validation step")
-					context='validation'
-					l.log(item=self.current_epoch, identifier="epoch", kind='metric', step=self.current_epoch, context=context)
-					l.log(item=self, identifier=f"model_version_{self.current_epoch}", kind='model_version', step=self.current_epoch, context=context)
-					l.log(item=None, identifier=None, kind='system', step=self.current_epoch, context=context)
-					# l.log(item=None, identifier=None, kind='carbon', step=self.current_epoch, context=context)
-					l.log(item=None, identifier="train_epoch_time", kind='execution_time', step=self.current_epoch,context=context)
+			l = self.itwinai_logger
+			# for l in self.itwinai_logger:
+			# 	if isinstance(l, Prov4MLLogger):
+			print("Prov4ML Logger validation step")
+			context='validation'
+			l.log(item=self.current_epoch, identifier="epoch", kind='metric', step=self.current_epoch, context=context)
+			l.log(item=self, identifier=f"model_version_{self.current_epoch}", kind='model_version', step=self.current_epoch, context=context)
+			l.log(item=None, identifier=None, kind='system', step=self.current_epoch, context=context)
+			# l.log(item=None, identifier=None, kind='carbon', step=self.current_epoch, context=context)
+			l.log(item=None, identifier="train_epoch_time", kind='execution_time', step=self.current_epoch,context=context)
 
 		# return the loss
 		return {'loss':loss}
@@ -169,15 +181,16 @@ class BaseLightningModule(pl.LightningModule):
 		
 		# Log with itwinai logger all the hyperparameters from training step
 		if self.itwinai_logger:
-			for l in self.itwinai_logger:
-				if isinstance(l, Prov4MLLogger):
-					print("Prov4ML Logger validation step")
-					context='validation'
-					l.log(item=self.current_epoch, identifier="epoch", kind='metric', step=self.current_epoch, context=context)
-					l.log(item=self, identifier=f"model_version_{self.current_epoch}", kind='model_version', step=self.current_epoch, context=context)
-					l.log(item=None, identifier=None, kind='system', step=self.current_epoch, context=context)
-					# l.log(item=None, identifier=None, kind='carbon', step=self.current_epoch, context=context)
-					l.log(item=None, identifier="train_epoch_time", kind='execution_time', step=self.current_epoch,context=context)
+			l = self.itwinai_logger
+			# for l in self.itwinai_logger:
+			# 	if isinstance(l, Prov4MLLogger):
+			print("Prov4ML Logger validation step")
+			context='validation'
+			l.log(item=self.current_epoch, identifier="epoch", kind='metric', step=self.current_epoch, context=context)
+			l.log(item=self, identifier=f"model_version_{self.current_epoch}", kind='model_version', step=self.current_epoch, context=context)
+			l.log(item=None, identifier=None, kind='system', step=self.current_epoch, context=context)
+			# l.log(item=None, identifier=None, kind='carbon', step=self.current_epoch, context=context)
+			l.log(item=None, identifier="train_epoch_time", kind='execution_time', step=self.current_epoch,context=context)
 
 		return super().on_validation_epoch_end()
 	

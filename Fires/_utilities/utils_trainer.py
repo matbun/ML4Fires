@@ -28,7 +28,7 @@ _log = logger(log_dir=LOGS_DIR).get_logger("Trainer Utilities")
 @export
 @debug(log=_log)
 def get_loggers(run_name:str) -> List:
-
+	return []
 	# # get MLFlow logger
 	# mlf_logger = MLFlowLogger(
 	# 	experiment_name="ML4Fires_Juno",
